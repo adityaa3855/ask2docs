@@ -10,7 +10,7 @@ print("Loading Embedding Model...")
 
 model = SentenceTransformer(
     "all-MiniLM-L6-v2",
-    local_files_only=True
+    local_files_only=False
 )
 
 

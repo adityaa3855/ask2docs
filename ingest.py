@@ -105,7 +105,7 @@ print("\nLoading Embedding Model...\n")
 
 model = SentenceTransformer(
     MODEL_NAME,
-    local_files_only=True
+    local_files_only=False
 )
 
 texts = [chunk.page_content for chunk in chunks]
