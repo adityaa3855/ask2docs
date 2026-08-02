@@ -1,0 +1,15 @@
+flask
+gunicorn
+langchain
+langchain-community
+faiss-cpu
+sentence-transformers
+python-dotenv
+openai
+tiktoken
+pypdf
+groq
+rank_bm25
+docx2txt
+unstructured
+markdown
