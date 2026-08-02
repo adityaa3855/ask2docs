@@ -1,10 +1,6 @@
 import os
 import pickle
-import faiss
 import numpy as np
-
-from rank_bm25 import BM25Okapi
-from sentence_transformers import SentenceTransformer
 
 
 # ==========================================
@@ -20,6 +16,7 @@ def get_model():
     if model is None:
         print("Loading Embedding Model...")
 
+        from sentence_transformers import SentenceTransformer
         model = SentenceTransformer(
             "all-MiniLM-L6-v2",
             local_files_only=False
@@ -47,6 +44,7 @@ def retrieve(query, faiss_k=5, bm25_k=5):
     ):
         return []
 
+    import faiss
     print("Loading Latest FAISS Index...")
 
     index = faiss.read_index(

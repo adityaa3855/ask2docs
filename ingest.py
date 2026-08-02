@@ -1,15 +1,7 @@
 import os
 import pickle
-import faiss
 import numpy as np
 import gc
-
-from langchain_text_splitters import RecursiveCharacterTextSplitter
-from rank_bm25 import BM25Okapi
-
-from utils.loaders import load_documents
-from utils.cleaner import clean_text
-from retriever import get_model
 
 
 # ===========================================
@@ -25,6 +17,7 @@ def run_ingestion():
     # LOAD DOCUMENTS
     # ===========================================
 
+    from utils.loaders import load_documents
     print("\nLoading Documents...\n")
     documents = load_documents(DATA_FOLDER)
     print(f"\nDocuments Loaded : {len(documents)}")
@@ -33,6 +26,7 @@ def run_ingestion():
     # CLEAN DOCUMENTS
     # ===========================================
 
+    from utils.cleaner import clean_text
     print("\nCleaning Documents...\n")
     for doc in documents:
         doc.page_content = clean_text(doc.page_content)
@@ -41,6 +35,7 @@ def run_ingestion():
     # SPLIT DOCUMENTS
     # ===========================================
 
+    from langchain_text_splitters import RecursiveCharacterTextSplitter
     print("Splitting Documents...\n")
     splitter = RecursiveCharacterTextSplitter(
         chunk_size=800,
@@ -66,6 +61,7 @@ def run_ingestion():
     os.makedirs(VECTOR_FOLDER, exist_ok=True)
 
     if len(chunks) == 0:
+        import faiss
         print("\nNo documents found.")
         empty_index = faiss.IndexFlatL2(384)
         faiss.write_index(
@@ -87,6 +83,7 @@ def run_ingestion():
 
     print("\nLoading Embedding Model...\n")
     # Reuse single model instance from retriever to save RAM
+    from retriever import get_model
     model = get_model()
 
     print("Generating Embeddings...\n")
@@ -106,6 +103,7 @@ def run_ingestion():
     # BUILD FAISS
     # ===========================================
 
+    import faiss
     print("\nBuilding FAISS Index...\n")
     dimension = embeddings.shape[1]
     index = faiss.IndexFlatL2(dimension)
@@ -121,6 +119,7 @@ def run_ingestion():
     # BUILD BM25
     # ===========================================
 
+    from rank_bm25 import BM25Okapi
     print("\nBuilding BM25 Index...\n")
     tokenized_chunks = [
         chunk.page_content.lower().split()

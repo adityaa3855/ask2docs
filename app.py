@@ -3,10 +3,6 @@ import os
 from flask import Flask, render_template, request, jsonify
 from werkzeug.utils import secure_filename
 
-from retriever import retrieve
-from llm import generate_answer
-from ingest import run_ingestion
-
 
 # =====================================================
 # Flask App
@@ -51,6 +47,9 @@ def ask():
                 "message": "Question cannot be empty."
 
             }), 400
+
+        from retriever import retrieve
+        from llm import generate_answer
 
         chunks = retrieve(question)
 
@@ -148,6 +147,7 @@ def upload():
 
         print("\nRebuilding Vector Store...\n")
 
+        from ingest import run_ingestion
         run_ingestion()
 
         print("\nVector Store Updated Successfully!\n")
@@ -232,6 +232,7 @@ def delete_document(filename):
 
         print("Rebuilding Vector Store...")
 
+        from ingest import run_ingestion
         run_ingestion()
 
         print("Done!")

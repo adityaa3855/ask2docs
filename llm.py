@@ -1,16 +1,17 @@
 import os
-
-from groq import Groq
 from dotenv import load_dotenv
 
 load_dotenv()
 
-client = Groq(
-    api_key=os.getenv("GROQ_API_KEY")
-)
+client = None
 
 
 def generate_answer(question, retrieved_chunks):
+
+    global client
+    if client is None:
+        from groq import Groq
+        client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
     context = ""
 
