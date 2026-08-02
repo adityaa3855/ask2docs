@@ -158,7 +158,7 @@ async function askQuestion() {
 
     questionInput.value = "";
     questionInput.style.height = "auto";
-    chatScrollWrapper.scrollTop = chatScrollWrapper.scrollHeight;
+    chatScrollWrapper.scrollTo({ top: chatScrollWrapper.scrollHeight, behavior: 'smooth' });
 
     loading.classList.remove("hidden");
     loadingText.innerText = "Generating response...";
@@ -177,7 +177,9 @@ async function askQuestion() {
         askBtn.disabled = false;
 
         if (!data.success) {
-            showToast(data.message || "An error occurred while generating a response.", "error");
+            let msg = data.message || "An error occurred while generating a response.";
+            if (msg.includes("<")) msg = "Unexpected error generating response.";
+            showToast(msg, "error");
             return;
         }
 
@@ -189,7 +191,7 @@ async function askQuestion() {
                     <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
                     <polyline points="14 2 14 8 20 8"></polyline>
                 </svg>
-                <div style="flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${source.file}">
+                <div style="flex:1; word-break: break-word;" title="${source.file}">
                     <strong>${source.file}</strong>
                 </div>
                 <div style="color:var(--text-secondary); font-size:12px; white-space:nowrap;">
@@ -223,13 +225,15 @@ async function askQuestion() {
         </div>
         `;
 
-        chatScrollWrapper.scrollTop = chatScrollWrapper.scrollHeight;
+        chatScrollWrapper.scrollTo({ top: chatScrollWrapper.scrollHeight, behavior: 'smooth' });
         bindSourceToggles();
 
     } catch (error) {
         loading.classList.add("hidden");
         askBtn.disabled = false;
-        showToast(error.message || "Failed to reach server.", "error");
+        let msg = error.message || "Failed to reach server.";
+        if (msg.includes("<")) msg = "Network error. Please try again.";
+        showToast(msg, "error");
     }
 }
 
@@ -343,6 +347,13 @@ async function handleUpload(files) {
     let progressIndex = 0;
     loadingText.innerText = progressStates[0];
     
+    // Disable inputs
+    fileInput.disabled = true;
+    document.querySelector('.upload-btn').classList.add('disabled');
+    askBtn.disabled = true;
+    questionInput.disabled = true;
+    document.querySelectorAll('.delete-btn').forEach(btn => btn.disabled = true);
+    
     const progressInterval = setInterval(() => {
         progressIndex = Math.min(progressIndex + 1, progressStates.length - 1);
         loadingText.innerText = progressStates[progressIndex];
@@ -363,16 +374,31 @@ async function handleUpload(files) {
             setTimeout(() => {
                 loading.classList.add("hidden");
                 loadDocuments();
+                resetUIState();
             }, 1000);
         } else {
             loading.classList.add("hidden");
-            showToast(data.message || "Embedding generation failed. Please try again.", "error");
+            resetUIState();
+            let msg = data.message || "Embedding generation failed. Please try again.";
+            if (msg.includes("<")) msg = "Unexpected error generating embeddings.";
+            showToast(msg, "error");
         }
     } catch (error) {
         clearInterval(progressInterval);
         loading.classList.add("hidden");
-        showToast("Upload failed: " + (error.message || "Please try again."), "error");
+        resetUIState();
+        let msg = error.message || "Please try again.";
+        if (msg.includes("<")) msg = "Network error during upload.";
+        showToast("Upload failed: " + msg, "error");
     }
+}
+
+function resetUIState() {
+    fileInput.disabled = false;
+    document.querySelector('.upload-btn').classList.remove('disabled');
+    askBtn.disabled = false;
+    questionInput.disabled = false;
+    document.querySelectorAll('.delete-btn').forEach(btn => btn.disabled = false);
 }
 
 // =========================================
@@ -384,6 +410,13 @@ async function deleteDocument(file) {
 
     loading.classList.remove("hidden");
     loadingText.innerText = "Deleting document and updating search index...";
+    
+    // Disable inputs
+    fileInput.disabled = true;
+    document.querySelector('.upload-btn').classList.add('disabled');
+    askBtn.disabled = true;
+    questionInput.disabled = true;
+    document.querySelectorAll('.delete-btn').forEach(btn => btn.disabled = true);
 
     try {
         const response = await fetch(`/delete/${encodeURIComponent(file)}`, {
@@ -392,15 +425,21 @@ async function deleteDocument(file) {
 
         const data = await response.json();
         loading.classList.add("hidden");
+        resetUIState();
 
         if (data.success) {
             showToast("Document deleted successfully", "success");
             loadDocuments();
         } else {
-            showToast(data.message || "Failed to delete document.", "error");
+            let msg = data.message || "Failed to delete document.";
+            if (msg.includes("<")) msg = "Unexpected error deleting document.";
+            showToast(msg, "error");
         }
     } catch (error) {
         loading.classList.add("hidden");
-        showToast(error.message || "Failed to delete document.", "error");
+        resetUIState();
+        let msg = error.message || "Failed to delete document.";
+        if (msg.includes("<")) msg = "Network error during deletion.";
+        showToast(msg, "error");
     }
 }
