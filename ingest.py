@@ -35,7 +35,7 @@ def run_ingestion():
     # SPLIT DOCUMENTS
     # ===========================================
 
-    from langchain_text_splitters import RecursiveCharacterTextSplitter
+    from utils.splitter import RecursiveCharacterTextSplitter
     print("Splitting Documents...\n")
     splitter = RecursiveCharacterTextSplitter(
         chunk_size=800,
@@ -87,11 +87,7 @@ def run_ingestion():
     model = get_model()
 
     print("Generating Embeddings...\n")
-    embeddings = model.encode(
-        texts,
-        convert_to_numpy=True,
-        show_progress_bar=True
-    )
+    embeddings = np.array(list(model.embed(texts))).astype("float32")
 
     # Free texts memory
     del texts

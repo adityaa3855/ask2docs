@@ -16,11 +16,8 @@ def get_model():
     if model is None:
         print("Loading Embedding Model...")
 
-        from sentence_transformers import SentenceTransformer
-        model = SentenceTransformer(
-            "all-MiniLM-L6-v2",
-            local_files_only=False
-        )
+        from fastembed import TextEmbedding
+        model = TextEmbedding(model_name="sentence-transformers/all-MiniLM-L6-v2")
 
     return model
 
@@ -80,10 +77,7 @@ def retrieve(query, faiss_k=5, bm25_k=5):
     # FAISS SEARCH
     # ==========================================
 
-    query_embedding = model.encode(
-        [query],
-        convert_to_numpy=True
-    ).astype("float32")
+    query_embedding = np.array(list(model.embed([query]))).astype("float32")
 
     distances, indices = index.search(query_embedding, faiss_k)
 
