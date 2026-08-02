@@ -1,12 +1,11 @@
 import os
-import subprocess
-import sys
 
 from flask import Flask, render_template, request, jsonify
 from werkzeug.utils import secure_filename
 
 from retriever import retrieve
 from llm import generate_answer
+from ingest import run_ingestion
 
 
 # =====================================================
@@ -149,10 +148,7 @@ def upload():
 
         print("\nRebuilding Vector Store...\n")
 
-        subprocess.run(
-            [sys.executable, "ingest.py"],
-            check=True
-        )
+        run_ingestion()
 
         print("\nVector Store Updated Successfully!\n")
 
@@ -236,10 +232,7 @@ def delete_document(filename):
 
         print("Rebuilding Vector Store...")
 
-        subprocess.run(
-            [sys.executable, "ingest.py"],
-            check=True
-        )
+        run_ingestion()
 
         print("Done!")
 
