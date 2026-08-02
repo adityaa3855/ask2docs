@@ -6,13 +6,31 @@ import numpy as np
 from rank_bm25 import BM25Okapi
 from sentence_transformers import SentenceTransformer
 
-print("Loading Embedding Model...")
 
-model = SentenceTransformer(
-    "all-MiniLM-L6-v2",
-    local_files_only=False
-)
+# ==========================================
+# LAZY LOAD MODEL
+# ==========================================
 
+model = None
+
+
+def get_model():
+    global model
+
+    if model is None:
+        print("Loading Embedding Model...")
+
+        model = SentenceTransformer(
+            "all-MiniLM-L6-v2",
+            local_files_only=False
+        )
+
+    return model
+
+
+# ==========================================
+# RETRIEVER
+# ==========================================
 
 def retrieve(query, faiss_k=5, bm25_k=5):
 
@@ -22,27 +40,43 @@ def retrieve(query, faiss_k=5, bm25_k=5):
 
     os.makedirs("vector_store", exist_ok=True)
 
-    if not os.path.exists(os.path.join("vector_store", "index.faiss")) or \
-       not os.path.exists(os.path.join("vector_store", "chunks.pkl")) or \
-       not os.path.exists(os.path.join("vector_store", "bm25.pkl")):
+    if (
+        not os.path.exists(os.path.join("vector_store", "index.faiss"))
+        or not os.path.exists(os.path.join("vector_store", "chunks.pkl"))
+        or not os.path.exists(os.path.join("vector_store", "bm25.pkl"))
+    ):
         return []
 
     print("Loading Latest FAISS Index...")
 
-    index = faiss.read_index(os.path.join("vector_store", "index.faiss"))
+    index = faiss.read_index(
+        os.path.join("vector_store", "index.faiss")
+    )
 
     print("Loading Latest Chunks...")
 
-    with open(os.path.join("vector_store", "chunks.pkl"), "rb") as f:
+    with open(
+        os.path.join("vector_store", "chunks.pkl"),
+        "rb"
+    ) as f:
         chunks = pickle.load(f)
-        
+
     if not chunks:
         return []
 
     print("Loading BM25 Index...")
 
-    with open(os.path.join("vector_store", "bm25.pkl"), "rb") as f:
+    with open(
+        os.path.join("vector_store", "bm25.pkl"),
+        "rb"
+    ) as f:
         bm25 = pickle.load(f)
+
+    # ==========================================
+    # LOAD MODEL ONLY WHEN NEEDED
+    # ==========================================
+
+    model = get_model()
 
     # ==========================================
     # FAISS SEARCH
@@ -77,7 +111,10 @@ def retrieve(query, faiss_k=5, bm25_k=5):
 
     print("\n------ FAISS RESULTS ------")
 
-    for i, (distance, idx) in enumerate(zip(distances[0], indices[0]), start=1):
+    for i, (distance, idx) in enumerate(
+        zip(distances[0], indices[0]),
+        start=1
+    ):
 
         if idx == -1:
             continue
